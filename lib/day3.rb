@@ -23,43 +23,44 @@ class Day3
 
 	def self.run_part2(file_name)
 		target = File.read(file_name).strip
-    starting_address = MemoryAddress.new(:east, Hash.new)
-    starting_address.value = 1
-    next_address = MemoryAddress.new(:east, { :west => starting_address } )
-    starting_address.surrounding_cells[:east] = next_address
-    while (next_address.value < target.to_i)
-      next_address = next_address.get_next_address 
+    address = MemoryAddress.new
+    while (address.value < target.to_i)
+      address = address.get_next_address 
     end
-    puts next_address.value
+    puts address.value
   end
 
   class MemoryAddress
     attr_accessor :value, :surrounding_cells
 
-    def initialize(direction, surrounding_cells)
-      @next_direction = get_next_direction(direction, surrounding_cells)
-      @value = get_value(surrounding_cells)
+    def initialize(direction = :south, surrounding_cells = Hash.new)
+      @direction = direction
       @surrounding_cells = surrounding_cells
+
+      value = get_value
+      @value = value < 1 ? 1 : value
     end
 
     def get_next_address
-      new_address = MemoryAddress.new(@next_direction, get_surrounding(@next_direction))
-      @surrounding_cells[@next_direction] = new_address
+      next_direction = get_next_direction
+      new_address = MemoryAddress.new(next_direction, next_surrounding(next_direction))
+      @surrounding_cells[next_direction] = new_address
       new_address
     end
 
     private
-    def get_next_direction(direction, surrounding_cells)
-      left_direction = turn_left(direction)
-      if !surrounding_cells.has_key?(left_direction)
-        left_direction
-      else
-        direction
-      end
+
+    def get_value
+      @surrounding_cells.values.inject(0) { |sum, x| sum + x.value }
     end
 
-    def get_value(cells)
-      cells.values.inject(0) { |sum, x| sum + x.value }
+    def get_next_direction
+      left_direction = turn_left(@direction)
+      if !@surrounding_cells.has_key?(left_direction)
+        left_direction
+      else
+        @direction
+      end
     end
 
     def turn_left(direction)
@@ -74,7 +75,7 @@ class Day3
       end
     end
 
-    def get_surrounding(next_direction)
+    def next_surrounding(next_direction)
       next_surrounding = Hash.new
       if next_direction == :east
         next_surrounding[:west] = self
@@ -100,7 +101,7 @@ class Day3
           next_surrounding[:southwest] = @surrounding_cells[:southwest]
             .surrounding_cells[:west]
         end
-      elsif next_direction == :south
+      else
         next_surrounding[:north] = self
         next_surrounding[:northeast] = @surrounding_cells[:east]
         next_surrounding[:east] = @surrounding_cells[:southeast]
