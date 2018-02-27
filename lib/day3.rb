@@ -21,7 +21,7 @@ class Day3
     puts xysum[0].abs + xysum[1].abs
 	end
 
-	def self.run_part2(file_name)
+  def self.run_part2(file_name)
 		target = File.read(file_name).strip
     address = MemoryAddress.new
     while (address.value < target.to_i)
