@@ -27,30 +27,25 @@ class Day13
         end
       end
     end
+
+    # Check if scanner is at the top when the packet enters its layer
+    def catches_packet?(delay)
+      (delay + @depth) % ((@range - 1) * 2) == 0
+    end
+
   end
 
   class Firewall
 
-    attr_reader :severity, :caught
+    attr_reader :severity, :caught, :scanners
 
-    def initialize(input, delay = 0)
+    def initialize(input)
       @scanners = []
       input.split("\n").each do |line|
         @scanners << Scanner.new(*line.scan(/\d+(?=:)|(?<= )\d+/))
       end
-      @packet_depth = -delay - 1
+      @packet_depth = -1
       @severity = 0
-      @caught = false
-    end
-
-    def reset(delay)
-      @scanners.each do |scanner|
-        scanner.position = 0
-        scanner.direction = :forward
-      end
-      @packet_depth = -delay - 1
-      @severity = 0
-      @caught = false
     end
 
     def packet_crossed?
@@ -62,7 +57,6 @@ class Day13
       current_scanner = @scanners.find { |scanner| scanner.depth == @packet_depth }
       if current_scanner && current_scanner.position == 0
         @severity += (current_scanner.depth * current_scanner.range)
-        @caught = true
       end
       @scanners.each { |scanner| scanner.advance }
     end
@@ -77,21 +71,9 @@ class Day13
   end
 
   def self.run_part2(file_name)
-    delay = 0
-    firewall = Firewall.new(File.read(file_name), delay)
-    loop do
-      caught = false
-      while !firewall.packet_crossed?
-        firewall.advance_packet
-        if firewall.caught
-          caught = true
-          break
-        end
-      end
-      break if !caught
-      delay += 1
-      firewall.reset(delay)
-    end
-    puts delay
+    firewall = Firewall.new(File.read(file_name))
+    safe_delays = (0..Float::INFINITY).lazy
+    firewall.scanners.each { |scanner| safe_delays = safe_delays.reject { |delay| scanner.catches_packet? delay } }
+    puts safe_delays.first
   end
 end
