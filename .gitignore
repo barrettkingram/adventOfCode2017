@@ -51,3 +51,4 @@ build-iPhoneSimulator/
 
 input.txt
 *.swp
+.byebug_history
